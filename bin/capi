@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# capi: a coding agent on your Anthropic API key, powered by Claude. Runs the TypeScript source through tsx, so there's no build step.
+dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+exec "$dir/node_modules/.bin/tsx" "$dir/src/cli.tsx" "$@"
