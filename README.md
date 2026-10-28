@@ -19,12 +19,12 @@ capi bills your Anthropic API key at the API's per-token prices; it never touche
 
 The easy way: open Claude Code in a terminal and paste
 
-> Install capi from https://github.com/OWNER/capi and follow its INSTALL.md.
+> Install capi from https://github.com/builtbynauroz/capi and follow its INSTALL.md.
 
 By hand:
 
 ```bash
-git clone https://github.com/OWNER/capi ~/capi
+git clone https://github.com/builtbynauroz/capi ~/capi
 cd ~/capi && npm install && npm link
 capi key add work --credit 50 --days 30   # asks for the key without showing it
 ```
