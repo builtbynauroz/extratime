@@ -385,16 +385,22 @@ function StatusBar({ s, columns }: { s: ViewState; columns: number }) {
               </Text>
               <Meter left={k.left} credit={k.credit} cells={narrow ? 5 : 10} />
               <Text> {money(k.left)} left</Text>
-              <Text dimColor> · {k.ended ? "ended" : `${k.daysLeft}d`}</Text>
+              {narrow && !k.ended ? null : <Text dimColor> · {k.ended ? "ended" : `${k.daysLeft}d`}</Text>}
             </Text>
           ) : (
             <Text color="red">no key</Text>
           )}
           <Text dimColor> · </Text>
           <Text>{MODEL_LABEL[s.model]}</Text>
+          {/* Under 80 columns the days and the effort give way, so the permission mode (auto: Claude acts unasked) stays. */}
+          {narrow ? null : (
+            <Text>
+              <Text dimColor> · </Text>
+              <Text>{s.effort}</Text>
+              <Text dimColor> effort</Text>
+            </Text>
+          )}
           <Text dimColor> · </Text>
-          <Text>{s.effort}</Text>
-          <Text dimColor> effort · </Text>
           <Text>{s.mode ? MODE_LABEL[s.mode] : "starting"}</Text>
           {columns >= 100 ? (
             <Text>
