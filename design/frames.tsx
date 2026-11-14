@@ -63,7 +63,7 @@ const states: Record<string, (width: number) => Partial<ViewState>> = {
   conversation: (w) => ({ items: conversation(w), input: "now run the whole suite", cursor: 23 }),
   writing: (w) => ({ items: conversation(w), busy: true, status: "Writing", live: "The whole suite passes: 214 tests in 41 seconds.\nOne warning is left in" }),
   tool: (w) => ({ items: conversation(w), busy: true, status: "Running Bash", tools: [{ id: "t1", name: "Bash", detail: "npm test" }], input: "then commit", cursor: 11, hint: "Claude is still on the last message · esc to interrupt" }),
-  permission: (w) => ({ items: conversation(w), busy: true, status: "Running Bash", ask: { tool: "Bash", detail: "git push origin main" } }),
+  permission: (w) => ({ items: conversation(w), busy: true, status: "Running Bash", ask: { tool: "Bash", detail: "git push origin main", remember: "in this project" } }),
   keys: (w) => ({ items: conversation(w), overlay: { kind: "keys", index: 1 } }),
   effort: (w) => ({ items: conversation(w), overlay: { kind: "effort", index: 3 } }),
   model: (w) => ({ items: conversation(w), overlay: { kind: "model", index: 1 } }),

@@ -27,7 +27,8 @@ export type SessionEvent =
   | { type: "billing"; key: string }
   | { type: "error"; message: string };
 
-export type PermissionAsk = { tool: string; detail: string; signal: AbortSignal };
+/** `remember`: where answering "always" saves the rule, in words; undefined when there's nothing to save. */
+export type PermissionAsk = { tool: string; detail: string; remember: string | undefined; signal: AbortSignal };
 export type PermissionAnswer = "yes" | "always" | "no";
 
 export type SessionOptions = {
@@ -337,7 +338,7 @@ export class Session {
   }
 
   private async permit(tool: string, input: Record<string, unknown>, signal: AbortSignal, suggestions: PermissionUpdate[] | undefined): Promise<PermissionResult> {
-    const answer = await this.o.ask({ tool, detail: describe(input, this.o.cwd), signal });
+    const answer = await this.o.ask({ tool, detail: describe(input, this.o.cwd), remember: rememberWhere(suggestions), signal });
     if (answer === "no") return { behavior: "deny", message: "The user said no. Stop here and wait for their next message.", interrupt: true };
     return { behavior: "allow", updatedInput: input, ...(answer === "always" && suggestions ? { updatedPermissions: suggestions } : {}) };
   }
@@ -345,6 +346,17 @@ export class Session {
   private fail(err: unknown): void {
     this.o.on({ type: "error", message: err instanceof Error ? err.message : String(err) });
   }
+}
+
+/** Where Claude Code would save an "always" answer, widest first, so the prompt never promises "this session" for a
+ * rule that lands in a settings file for good. */
+export function rememberWhere(suggestions: PermissionUpdate[] | undefined): string | undefined {
+  const where = new Set((suggestions ?? []).map((s) => s.destination));
+  if (where.has("userSettings")) return "in any project";
+  if (where.has("projectSettings")) return "in this project's shared settings";
+  if (where.has("localSettings")) return "in this project";
+  if (where.has("session") || where.has("cliArg")) return "this session";
+  return undefined;
 }
 
 const FIELDS = ["command", "file_path", "notebook_path", "path", "pattern", "url", "query", "skill", "description", "prompt"];

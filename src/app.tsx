@@ -8,7 +8,7 @@ import { Session, type PermissionAnswer, type PermissionAsk, type RunningTool, t
 import { ACCENTS, EFFORT_NOTE, MODEL_LABEL, View, type Item, type KeyView, type Overlay } from "./ui.js";
 
 export type Boot = { config: Config; key: string; ledger: Spend[]; home: string; resume: string | undefined; cwd: string };
-type Pending = { tool: string; detail: string; resolve: (a: PermissionAnswer) => void };
+type Pending = { tool: string; detail: string; remember: string | undefined; resolve: (a: PermissionAnswer) => void };
 
 const MODES: PermissionMode[] = ["default", "acceptEdits", "auto", "plan"];
 const MODEL_NAMES: ModelName[] = Object.keys(MODELS).filter(isModel);
@@ -63,6 +63,7 @@ export function App({ boot }: { boot: Boot }) {
       const pending: Pending = {
         tool: a.tool,
         detail: a.detail,
+        remember: a.remember,
         resolve: (answer) => {
           if (settled) return;
           settled = true;
@@ -321,7 +322,9 @@ export function App({ boot }: { boot: Boot }) {
   useInput((ch, key) => {
     const ask = asks[0];
     if (ask) {
-      const answer: PermissionAnswer | undefined = ch === "y" ? "yes" : ch === "a" ? "always" : ch === "n" || key.escape || (key.ctrl && ch === "c") ? "no" : undefined;
+      // "a" only where there's a rule to save; the prompt then says where it goes.
+      const answer: PermissionAnswer | undefined =
+        ch === "y" ? "yes" : ch === "a" && ask.remember ? "always" : ch === "n" || key.escape || (key.ctrl && ch === "c") ? "no" : undefined;
       if (answer) ask.resolve(answer);
       return;
     }
@@ -356,7 +359,7 @@ export function App({ boot }: { boot: Boot }) {
         busy,
         status,
         overlay,
-        ask: firstAsk ? { tool: firstAsk.tool, detail: firstAsk.detail } : undefined,
+        ask: firstAsk ? { tool: firstAsk.tool, detail: firstAsk.detail, remember: firstAsk.remember } : undefined,
         input: input.value,
         cursor: input.cursor,
         hint,

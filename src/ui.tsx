@@ -29,7 +29,7 @@ export type Item =
   | { kind: "notice"; tone: Tone; text: string }
   | { kind: "turn"; usd: number; ms: number; ok: boolean };
 export type Overlay = { kind: "keys" | "effort" | "model"; index: number } | { kind: "help" } | { kind: "usage" };
-export type Ask = { tool: string; detail: string };
+export type Ask = { tool: string; detail: string; remember?: string | undefined };
 export type ViewState = {
   items: Item[];
   live: string;
@@ -365,7 +365,7 @@ export function UsageView({ rows }: { rows: UsageRow[] }) {
 
 function PermissionBox({ ask }: { ask: Ask }) {
   return (
-    <Panel title={`Allow ${ask.tool}?`} color="yellow" hint="y yes · a yes, and don't ask again this session · n no, and stop">
+    <Panel title={`Allow ${ask.tool}?`} color="yellow" hint={`y yes · ${ask.remember ? `a yes, and don't ask again ${ask.remember} · ` : ""}n no, and stop`}>
       <Text>{ask.detail || "(no details)"}</Text>
     </Panel>
   );
