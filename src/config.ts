@@ -151,12 +151,14 @@ export function homes(): string[] {
 
 export const defaultHome = (): string => homes()[0] ?? join(homedir(), ".claude");
 
+/** Where Claude Code keeps a folder's conversations: every character but letters and digits becomes a dash. */
+const projectDir = (home: string, cwd: string): string => join(home, "projects", cwd.replace(/[^A-Za-z0-9]/g, "-"));
+
 /** The newest conversation for this folder across every home, or the one with this ID. */
 export function findSession(cwd: string, id?: string): { home: string; sessionId: string } | undefined {
-  const folder = cwd.replace(/[^A-Za-z0-9]/g, "-");
   let best: { home: string; sessionId: string; mtime: number } | undefined;
   for (const home of homes()) {
-    const dir = join(home, "projects", folder);
+    const dir = projectDir(home, cwd);
     if (!existsSync(dir)) continue;
     for (const file of readdirSync(dir)) {
       if (!file.endsWith(".jsonl")) continue;
@@ -167,4 +169,45 @@ export function findSession(cwd: string, id?: string): { home: string; sessionId
     }
   }
   return best && { home: best.home, sessionId: best.sessionId };
+}
+
+export type Recap = { user: string; reply: string | undefined };
+
+const clip = (text: string, max: number): string => {
+  const one = text.replace(/\s+/g, " ").trim();
+  return one.length > max ? `${one.slice(0, max - 1)}…` : one;
+};
+
+/** The words in a transcript message, or "" for tool results, command wrappers and Claude Code's own meta lines. */
+function wordsOf(v: Record<string, unknown>): string {
+  const message = isRecord(v.message) ? v.message : {};
+  const content = message.content;
+  const parts = typeof content === "string" ? [content] : Array.isArray(content) ? content.flatMap((b) => (isRecord(b) && b.type === "text" && typeof b.text === "string" ? [b.text] : [])) : [];
+  const text = parts.join("\n").trim();
+  return v.isMeta === true || text.startsWith("<") ? "" : text;
+}
+
+/** Where a conversation left off: the last thing the user said, and Claude's reply to it if there was one. */
+export function lastExchange(home: string, cwd: string, sessionId: string): Recap | undefined {
+  const file = join(projectDir(home, cwd), `${sessionId}.jsonl`);
+  if (!existsSync(file)) return undefined;
+  let user: string | undefined;
+  let reply: string | undefined;
+  for (const line of readFileSync(file, "utf8").split("\n")) {
+    if (!line.includes('"user"') && !line.includes('"assistant"')) continue;
+    let v: unknown;
+    try {
+      v = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (!isRecord(v) || v.isSidechain === true) continue;
+    const words = v.type === "user" || v.type === "assistant" ? wordsOf(v) : "";
+    if (!words) continue;
+    if (v.type === "user") {
+      user = words;
+      reply = undefined;
+    } else reply = words;
+  }
+  return user === undefined ? undefined : { user: clip(user, 200), reply: reply === undefined ? undefined : clip(reply, 240) };
 }

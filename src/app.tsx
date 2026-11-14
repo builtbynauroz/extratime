@@ -1,7 +1,7 @@
 import type { EffortLevel, PermissionMode } from "@anthropic-ai/claude-agent-sdk";
 import { useAnimation, useApp, useInput, usePaste, useWindowSize, type Key } from "ink";
 import { useEffect, useRef, useState } from "react";
-import { EFFORTS, MODELS, creditOf, isEffort, isModel, readKey, readLedger, recordSpend, saveConfig, usageOf, type Config, type ModelName, type Spend } from "./config.js";
+import { EFFORTS, MODELS, creditOf, isEffort, isModel, lastExchange, readKey, readLedger, recordSpend, saveConfig, usageOf, type Config, type ModelName, type Spend } from "./config.js";
 import { money, tilde, whole } from "./format.js";
 import { renderMarkdown } from "./markdown.js";
 import { Session, type PermissionAnswer, type PermissionAsk, type RunningTool, type SessionEvent } from "./session.js";
@@ -180,7 +180,11 @@ export function App({ boot }: { boot: Boot }) {
   };
 
   useEffect(() => {
-    if (boot.resume) note("info", `Continuing the last conversation in this folder, from ${tilde(boot.home)}.`);
+    if (boot.resume) {
+      note("info", `Continuing the last conversation in this folder, from ${tilde(boot.home)}.`);
+      const recap = lastExchange(boot.home, boot.cwd, boot.resume);
+      if (recap) add({ kind: "recap", ...recap });
+    }
     session.open();
     return () => {
       void session.stop();

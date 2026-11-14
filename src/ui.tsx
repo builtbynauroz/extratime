@@ -27,6 +27,7 @@ export type Item =
   | { kind: "assistant"; text: string }
   | { kind: "tool"; name: string; detail: string; ok: boolean; summary: string }
   | { kind: "notice"; tone: Tone; text: string }
+  | { kind: "recap"; user: string; reply: string | undefined }
   | { kind: "turn"; usd: number; ms: number; ok: boolean };
 export type Overlay = { kind: "keys" | "effort" | "model"; index: number } | { kind: "help" } | { kind: "usage" };
 export type Ask = { tool: string; detail: string; remember?: string | undefined };
@@ -161,6 +162,17 @@ function ItemView({ item, accent, columns }: { item: Item; accent: string; colum
         <Box marginTop={1}>
           <Text color={TONE[item.tone].color}>{TONE[item.tone].glyph} </Text>
           <Text>{item.text}</Text>
+        </Box>
+      );
+    case "recap":
+      return (
+        <Box flexDirection="column" marginTop={1}>
+          <Text bold>Where you left off</Text>
+          <Text>
+            <Text color="gray">› </Text>
+            <Text dimColor>{item.user}</Text>
+          </Text>
+          <Text dimColor>{item.reply ?? "No reply yet. Say go on and Claude picks it up from here."}</Text>
         </Box>
       );
     case "turn":

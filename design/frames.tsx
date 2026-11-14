@@ -14,7 +14,8 @@ const ends = new Date(2026, 11, 14);
 const work: KeyView = { label: "work", accent: "cyan", left: 31.2, credit: 50, ends, daysLeft: 23, ended: false, out: false, active: true, stored: true };
 const personal: KeyView = { label: "personal", accent: "magenta", left: 20, credit: 20, ends, daysLeft: 23, ended: false, out: false, active: false, stored: true };
 const spend = (day: number, usd: number, model: string): Spend => ({ t: new Date(2026, 10, day, 15).toISOString(), key: "work", usd, model });
-const ledger = [spend(14, 3.1, "claude-opus-5-5"), spend(15, 1.4, "claude-opus-5-5"), spend(16, 6.2, "claude-opus-5-5"), spend(18, 0.4, "claude-haiku-5-5"), spend(19, 5.3, "claude-sonnet-5-5"), spend(20, 2.4, "claude-opus-5-5")];
+// The ledger stores capi's short model names, as recordSpend writes them.
+const ledger = [spend(14, 3.1, "opus"), spend(15, 1.4, "opus"), spend(16, 6.2, "opus"), spend(18, 0.4, "haiku"), spend(19, 5.3, "sonnet"), spend(20, 2.4, "opus")];
 const now = new Date(2026, 10, 21, 18);
 const usage: UsageRow[] = [
   { ...usageOf({ label: "work", credit: 50, start: "2026-11-14", days: 30 }, ledger, now), accent: "cyan", active: true },
@@ -60,6 +61,16 @@ const conversation = (width: number): Item[] => [
 
 const states: Record<string, (width: number) => Partial<ViewState>> = {
   start: () => ({}),
+  // capi's moment: Claude Code's limit ran out mid-request, and `capi -c` picks the conversation up.
+  continued: () => ({
+    items: [
+      welcome([work, personal]),
+      { kind: "notice", tone: "info", text: "Continuing the last conversation in this folder, from ~/.claude." },
+      { kind: "recap", user: "the checkout test is failing, fix it", reply: undefined },
+    ],
+    input: "go on",
+    cursor: 5,
+  }),
   conversation: (w) => ({ items: conversation(w), input: "now run the whole suite", cursor: 23 }),
   writing: (w) => ({ items: conversation(w), busy: true, status: "Writing", live: "The whole suite passes: 214 tests in 41 seconds.\nOne warning is left in" }),
   tool: (w) => ({ items: conversation(w), busy: true, status: "Running Bash", tools: [{ id: "t1", name: "Bash", detail: "npm test" }], input: "then commit", cursor: 11, hint: "Claude is still on the last message · esc to interrupt" }),
