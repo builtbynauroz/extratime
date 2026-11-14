@@ -118,7 +118,7 @@ function ItemView({ item, accent, columns }: { item: Item; accent: string; colum
             <Text color={accent} bold>
               ◆ capi
             </Text>
-            <Text dimColor>  your API key · Powered by Claude</Text>
+            <Text dimColor>  coding on your own API key · Powered by Claude</Text>
           </Text>
           <Text dimColor>{tilde(item.cwd)}</Text>
           <Text dimColor>conversations are saved in {tilde(item.home)}</Text>
