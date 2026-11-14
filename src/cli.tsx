@@ -127,9 +127,10 @@ async function keyCommand(args: string[]): Promise<void> {
   const key = process.stdin.isTTY ? await readHidden(`API key for ${label}${hasKey ? " (Enter keeps the stored one)" : ""}: `) : await readPiped();
   if (key) storeKey(label, key);
   else if (!hasKey) throw new Error("No key entered, so nothing was saved.");
-  // A new key starts a new window; otherwise the window stays where it was.
+  // A new key starts a new window; otherwise the window stays where it was. Saving a key clears its out-of-credit
+  // mark: the owner topped it up, or wants it tried again (a real billing error marks it out again).
   const start = from ?? (key || !existing ? localDate() : existing.start);
-  const entry: KeyConfig = { label, credit, start, days, ...(existing?.outSince && start === existing.start ? { outSince: existing.outSince } : {}) };
+  const entry: KeyConfig = { label, credit, start, days };
   const keys = existing ? config.keys.map((k) => (k.label === label ? entry : k)) : [...config.keys, entry];
   saveConfig({ ...config, keys, active: config.active ?? label });
   const window = creditOf(entry, []);
@@ -184,7 +185,7 @@ async function printMode(prompt: string, resumeWanted: boolean): Promise<void> {
         else if (e.type === "error") process.stderr.write(`capi: ${e.message}\n`);
         else if (e.type === "billing") process.stderr.write(`capi: ${e.key} is out of credit\n`);
         else if (e.type === "turnEnd") {
-          if (e.usd > 0) ledger.push(recordSpend(e.key, e.usd, config.model));
+          if (e.usd > 0) ledger.push(recordSpend(e.key, e.usd, e.model));
           const k = config.keys.find((x) => x.label === e.key);
           const c = k ? creditOf(k, ledger) : undefined;
           out(`${e.ok ? "✓" : "✗"} ${money(e.usd)} · ${duration(e.ms)}${c ? ` · ${e.key}: ${money(c.left)} left of ${whole(c.credit)}, ${c.daysLeft} days` : ""}\n`);
@@ -223,6 +224,7 @@ async function main(args: string[]): Promise<void> {
   }
   const resumeAt = args.findIndex((a) => a === "-r" || a === "--resume");
   const id = resumeAt >= 0 ? args[resumeAt + 1] : undefined;
+  if (resumeAt >= 0 && (!id || id.startsWith("-"))) throw new Error("Give the conversation's ID after -r, or use -c for the newest one here.");
   const wanted = id !== undefined || resumeWanted;
   const cwd = process.cwd();
   const found = wanted ? findSession(cwd, id) : undefined;

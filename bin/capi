@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
 # capi: a coding agent on your Anthropic API key, powered by Claude. Runs the TypeScript source through tsx, so there's no build step.
-dir="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+# Follows npm link's symlinks by hand: `readlink -f` only exists from macOS 12.3, and Node 20 runs on older macOS too.
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  target="$(readlink "$src")"
+  case "$target" in /*) src="$target" ;; *) src="$(dirname "$src")/$target" ;; esac
+done
+dir="$(cd "$(dirname "$src")/.." && pwd)"
 exec "$dir/node_modules/.bin/tsx" "$dir/src/cli.tsx" "$@"

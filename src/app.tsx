@@ -1,8 +1,8 @@
 import type { EffortLevel, PermissionMode } from "@anthropic-ai/claude-agent-sdk";
 import { useAnimation, useApp, useInput, usePaste, useWindowSize, type Key } from "ink";
 import { useEffect, useRef, useState } from "react";
-import { EFFORTS, MODELS, creditOf, isEffort, isModel, readKey, recordSpend, saveConfig, usageOf, type Config, type ModelName, type Spend } from "./config.js";
-import { money, tilde } from "./format.js";
+import { EFFORTS, MODELS, creditOf, isEffort, isModel, readKey, readLedger, recordSpend, saveConfig, usageOf, type Config, type ModelName, type Spend } from "./config.js";
+import { money, tilde, whole } from "./format.js";
 import { renderMarkdown } from "./markdown.js";
 import { Session, type PermissionAnswer, type PermissionAsk, type RunningTool, type SessionEvent } from "./session.js";
 import { ACCENTS, EFFORT_NOTE, MODEL_LABEL, View, type Item, type KeyView, type Overlay } from "./ui.js";
@@ -101,6 +101,22 @@ export function App({ boot }: { boot: Boot }) {
     note("bad", `${label} is out of credit, and no other key has any left. Add one with: capi key add <name>`);
   };
 
+  /** The reply that spends a key's last budget hands the next message to a key with budget left. Unlike a billing
+   * error it doesn't mark the key out: the API key itself may still have money. */
+  const budgetSpent = (label: string, before: Spend[], after: Spend[]): void => {
+    const cfg = latest.current.config;
+    const k = cfg.keys.find((x) => x.label === label);
+    if (!k || label !== cfg.active || creditOf(k, before).left <= 0 || creditOf(k, after).left > 0) return;
+    const next = cfg.keys.map((x) => creditOf(x, after)).find((c) => c.label !== label && c.left > 0 && hasKey(c.label));
+    if (next) {
+      commit({ ...cfg, active: next.label });
+      session.switchKey(next.label);
+      note("warn", `${label}'s ${whole(k.credit)} budget is spent. The next message goes on ${next.label} (${money(next.left)} left).`);
+      return;
+    }
+    note("warn", `${label}'s ${whole(k.credit)} budget is spent, and no other key has budget left. Raise it: capi key add ${label} --credit <more>`);
+  };
+
   onEvent.current = (e) => {
     switch (e.type) {
       case "ready":
@@ -135,17 +151,24 @@ export function App({ boot }: { boot: Boot }) {
         setStatus("Thinking");
         return;
       }
-      case "turnEnd":
+      case "turnEnd": {
+        const before = latest.current.ledger;
+        let spends = before;
         if (e.usd > 0) {
-          const spend = recordSpend(e.key, e.usd, latest.current.config.model);
-          setLedger((spends) => [...spends, spend]);
+          recordSpend(e.key, e.usd, e.model);
+          // Read it back rather than append: another capi window may be spending the same key.
+          spends = readLedger();
+          setLedger(spends);
+          latest.current.ledger = spends;
           setSessionUsd((usd) => usd + e.usd);
         }
         add({ kind: "turn", usd: e.usd, ms: e.ms, ok: e.ok });
         setRunning([]);
         setLive("");
         setBusy(false);
+        if (e.usd > 0) budgetSpent(e.key, before, spends);
         return;
+      }
       case "billing":
         outOfCredit(e.key);
         return;
@@ -298,7 +321,7 @@ export function App({ boot }: { boot: Boot }) {
   useInput((ch, key) => {
     const ask = asks[0];
     if (ask) {
-      const answer: PermissionAnswer | undefined = ch === "y" ? "yes" : ch === "a" ? "always" : ch === "n" || key.escape ? "no" : undefined;
+      const answer: PermissionAnswer | undefined = ch === "y" ? "yes" : ch === "a" ? "always" : ch === "n" || key.escape || (key.ctrl && ch === "c") ? "no" : undefined;
       if (answer) ask.resolve(answer);
       return;
     }

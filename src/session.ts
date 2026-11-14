@@ -23,7 +23,7 @@ export type SessionEvent =
   | { type: "message"; text: string }
   | { type: "tool"; tool: RunningTool }
   | { type: "toolDone"; id: string; ok: boolean; summary: string }
-  | { type: "turnEnd"; key: string; usd: number; ms: number; ok: boolean }
+  | { type: "turnEnd"; key: string; usd: number; ms: number; ok: boolean; model: ModelName }
   | { type: "billing"; key: string }
   | { type: "error"; message: string };
 
@@ -87,6 +87,8 @@ export class Session {
   private run: Run | undefined;
   private costBase = 0;
   private turnStart = 0;
+  /** The model a reply started on: a model switched mid-reply mustn't take its cost. */
+  private turnModel: ModelName;
   private pendingKey: string | undefined;
   private carryOn = false;
   private switching: Promise<void> | undefined;
@@ -96,6 +98,7 @@ export class Session {
     this.sessionId = o.resume;
     this.key = o.key;
     this.model = o.model;
+    this.turnModel = o.model;
     this.effort = o.effort;
   }
 
@@ -106,6 +109,7 @@ export class Session {
   send(text: string): void {
     this.busy = true;
     this.turnStart = Date.now();
+    this.turnModel = this.model;
     this.o.on({ type: "turnStart" });
     void this.deliver(text);
   }
@@ -316,7 +320,7 @@ export class Session {
 
   private endTurn(usd: number, ok: boolean): void {
     this.busy = false;
-    this.o.on({ type: "turnEnd", key: this.key, usd, ms: Date.now() - this.turnStart, ok });
+    this.o.on({ type: "turnEnd", key: this.key, usd, ms: Date.now() - this.turnStart, ok, model: this.turnModel });
   }
 
   private afterTurn(): void {

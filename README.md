@@ -29,6 +29,8 @@ cd ~/capi && npm install && npm link
 capi key add work --credit 50 --days 30   # asks for the key without showing it
 ```
 
+If `npm link` fails with `EACCES`, don't use sudo: `npm config set prefix ~/.npm-global`, put `~/.npm-global/bin` on your `PATH`, and run it again.
+
 ## Use
 
 ```
@@ -43,7 +45,7 @@ capi key add <name> [--credit 100] [--days 30] [--from <YYYY-MM-DD>]
 capi key list         your keys, credit left and days left
 ```
 
-Inside capi: ⌃K switch key · ⌃E effort · ⇧⇥ permissions · esc interrupt · /help. With two keys, capi moves to the other one when a key runs out and carries on.
+Inside capi: ⌃K switch key · ⌃E effort · ⇧⇥ permissions · esc interrupt · /help. With two keys, capi moves to the other one when a key's budget is spent or its API balance runs out, and carries on. `capi key add <name>` again after topping a key up clears its out-of-credit mark.
 
 Your CLAUDE.md files, settings and skills work as they do in Claude Code. To see capi's credit in Claude Code's status line, set this in `~/.claude/settings.json`:
 
