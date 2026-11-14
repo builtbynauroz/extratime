@@ -148,7 +148,7 @@ function ItemView({ item, accent, columns }: { item: Item; accent: string; colum
       return (
         <Box flexDirection="column" marginTop={1}>
           <Text>
-            <Text color={item.ok ? "green" : "red"}>● </Text>
+            <Text color={item.ok ? "green" : "red"}>{item.ok ? "● " : "✗ "}</Text>
             <Text bold>{item.name}</Text>
             {item.detail ? <Text dimColor>  {item.detail}</Text> : null}
           </Text>
