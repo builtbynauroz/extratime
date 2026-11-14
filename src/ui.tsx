@@ -79,6 +79,7 @@ const TONE: Record<Tone, { glyph: string; color: string }> = {
 };
 const SPIN = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const PICK = "↑↓ choose · enter select · esc close";
+const CLOSE = "any key closes";
 
 function Meter({ left, credit, cells }: { left: number; credit: number; cells: number }) {
   const share = credit > 0 ? Math.max(0, Math.min(1, left / credit)) : 0;
@@ -257,18 +258,21 @@ function OverlayView({ s, overlay, accent }: { s: ViewState; overlay: Overlay; a
   switch (overlay.kind) {
     case "help":
       return (
-        <Panel title="capi" color={accent} hint="Any other /command goes to the agent: /compact, your skills. Press any key to close.">
+        <Panel title="capi" color={accent} hint={CLOSE}>
           {HELP.map(([key, what]) => (
             <Text key={key}>
               <Text color={accent}>{key.padEnd(17)}</Text>
               <Text>{what}</Text>
             </Text>
           ))}
+          <Box marginTop={1}>
+            <Text dimColor>Any other /command goes to the agent: /compact, your skills.</Text>
+          </Box>
         </Panel>
       );
     case "usage":
       return (
-        <Panel title="Usage" color={accent} hint="Press any key to close.">
+        <Panel title="Usage" color={accent} hint={CLOSE}>
           <UsageView rows={s.usage} />
         </Panel>
       );
