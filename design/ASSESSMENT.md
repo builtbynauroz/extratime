@@ -23,3 +23,38 @@ Stage A of the ui-ux-engineer pipeline, 2026-11-14, before going public. Path: *
 | 8 | The welcome line "your API key · Powered by Claude" reads as a fragment. | `start-80.txt` | Weak (copy; needs the owner's yes) | 5 | "◆ capi  coding on your own API key · Powered by Claude" | XS |
 
 No slop or dated patterns: named ANSI colours only, no gradients, and type hierarchy from bold, dim and colour.
+
+## After the fixes (2026-11-15)
+
+The owner picked all eight. Each fix is its own commit; `npm run frames design/frames` re-renders and the frames are compared line by line with the baseline.
+
+| # | Result | Commit |
+|---|---|---|
+| 1 | Fixed: "a" names the widest place the rule is saved ("this session", "in this project", "in this project's shared settings", "in any project"), and isn't offered when nothing would be saved. A test covers the wording. | `a3c93d5` |
+| 2 | Fixed: a failed tool shows ✗. | `a709790` |
+| 3 | Fixed: the sentence moved into help's body, and help and usage end on "any key closes". | `3802fc9` |
+| 4 | Fixed: the status line puts the key in use first. | `d18e510` |
+| 5 | **Not a finding.** The usage view already shows "Opus 5.5"; the raw names came from the frame fixture, now corrected. | `49bba5d` |
+| 6 | Fixed: `capi -c` shows "Where you left off": the last message, and the reply or "No reply yet". New `continued` frame; tests cover the parser. | `49bba5d` |
+| 7 | Fixed: under 80 columns the days and effort give way, so the mode stays. | `77121e1` |
+| 8 | Fixed: "◆ capi  coding on your own API key · Powered by Claude". | `8d645bd` |
+
+**Audit (stage 6), checked against the baseline:**
+- no line wider than its window at 60, 80 or 120 columns, in any of the 18 states;
+- apart from the welcome line, only the lines above changed, so nothing regressed;
+- no cue rests on colour alone any more;
+- every panel ends on one of two footers.
+
+The lenses on the frames, out of 10:
+
+| Lens | Score |
+|---|---|
+| Hierarchy | 8 |
+| Typography (bold, dim, colour in one monospace) | 8 |
+| Colour | 9 |
+| Composition | 8 |
+| Density | 8 |
+| Affordance | 9 |
+| Brand consistency | 9 |
+
+**Not run:** a real terminal in a light theme, by eye. The colours are named ANSI ones, which the user's own theme sets.

@@ -43,7 +43,7 @@ If `npm link` fails with `EACCES`, don't use sudo: `npm config set prefix ~/.npm
 
 ```
 capi                  start a new conversation in this folder
-capi -c               continue the newest conversation in this folder,
+capi -c               continue the newest conversation in this folder (it shows where you left off),
                       including one started in Claude Code
 capi -r <id>          continue a conversation by its ID
 capi -p "<prompt>"    one reply, printed, with no screen (add -c to continue)
