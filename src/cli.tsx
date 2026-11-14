@@ -151,7 +151,8 @@ function statusLine(): void {
   const config = loadConfig();
   if (!config.keys.length) return out("capi: no keys");
   const ledger = readLedger();
-  const parts = config.keys.map((k) => {
+  const inUseFirst = [...config.keys].sort((a, b) => Number(b.label === config.active) - Number(a.label === config.active));
+  const parts = inUseFirst.map((k) => {
     const c = creditOf(k, ledger);
     if (k.label !== config.active) return `${ANSI.dim}○ ${k.label} ${money(c.left)}${ANSI.reset}`;
     const share = c.credit > 0 ? c.left / c.credit : 0;
