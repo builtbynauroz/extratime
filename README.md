@@ -17,7 +17,15 @@ capi bills your Anthropic API key at the API's per-token prices; it never touche
 
 ## Install
 
-The easy way: open Claude Code in a terminal and paste
+As a Claude Code plugin, in one step (Claude Code 2.1.275 or later):
+
+```
+/plugin install capi --marketplace builtbynauroz/capi
+```
+
+Then ask Claude Code to "set up capi": it follows INSTALL.md, and from then on a toast warns you when your 5-hour or weekly limit passes 90%, and tells you to run `capi -c` when it runs out. From a shell: `claude plugin install capi --marketplace builtbynauroz/capi`.
+
+Without the plugin, open Claude Code in a terminal and paste
 
 > Install capi from https://github.com/builtbynauroz/capi and follow its INSTALL.md.
 

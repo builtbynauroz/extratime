@@ -1,0 +1,13 @@
+{
+  "name": "capi",
+  "description": "capi: carry on a Claude Code conversation on your own Anthropic API key when your plan's limit runs out.",
+  "owner": {
+    "name": "builtbynauroz"
+  },
+  "plugins": [
+    {
+      "name": "capi",
+      "source": "./"
+    }
+  ]
+}
