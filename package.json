@@ -1,6 +1,6 @@
 {
   "name": "extratime",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A terminal coding agent on your own Anthropic API key, built on the Claude Agent SDK. Powered by Claude.",
   "license": "MIT",
   "author": "builtbynauroz",
@@ -30,9 +30,6 @@
   "engines": {
     "node": ">=20.6"
   },
-  "os": [
-    "darwin"
-  ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/*.test.ts",

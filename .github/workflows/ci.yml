@@ -1,0 +1,44 @@
+# Checks extratime on macOS, Linux and Windows. Standard GitHub-hosted runners are free on public repositories
+# and don't use the account's included minutes; never switch these to larger runners, which are billed.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Install the packed package the way users do, and run it
+        shell: bash
+        run: |
+          npm pack
+          npm install -g ./extratime-*.tgz
+          extratime --help
+
+      # A key goes into this platform's store and comes back out unchanged (storeKey checks), then key list sees it.
+      # The macOS Keychain path is checked by hand on a real Mac, not on CI.
+      - name: Store a key and read it back
+        if: runner.os != 'macOS'
+        shell: bash
+        run: |
+          echo "sk-ant-api03-ci$(printf 'x%.0s' $(seq 1 40))" | extratime key add ci --credit 5 --days 7
+          extratime key list | grep -F '$5.00 left of $5'
+          extratime status
+          if [ "$RUNNER_OS" = Linux ]; then test "$(stat -c %a ~/.extratime/keys.json)" = 600; fi
+          if [ "$RUNNER_OS" = Windows ]; then ! grep -q sk-ant ~/.extratime/keys.json; fi

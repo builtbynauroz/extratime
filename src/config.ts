@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { EffortLevel } from "@anthropic-ai/claude-agent-sdk";
@@ -8,12 +8,15 @@ export const EXTRATIME_DIR = join(homedir(), ".extratime");
 const CONFIG_FILE = join(EXTRATIME_DIR, "config.json");
 const LEDGER_FILE = join(EXTRATIME_DIR, "ledger.jsonl");
 const KEYCHAIN_SERVICE = "extratime";
+const KEYS_FILE = join(EXTRATIME_DIR, "keys.json");
+const MAC = process.platform === "darwin";
+const WINDOWS = process.platform === "win32";
 
 export const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const satisfies readonly EffortLevel[];
 export const MODELS = { opus: "claude-opus-5-5", sonnet: "claude-sonnet-5-5", haiku: "claude-haiku-5-5" } as const;
 export type ModelName = keyof typeof MODELS;
 
-/** A key's own settings: its credit lasts `days` from `start` (a local YYYY-MM-DD). The key itself lives in the Keychain. */
+/** A key's own settings: its credit lasts `days` from `start` (a local YYYY-MM-DD). The key itself is in the Keychain on macOS, keys.json elsewhere. */
 export type KeyConfig = { label: string; credit: number; start: string; days: number; outSince?: string };
 export type Config = { keys: KeyConfig[]; active?: string; model: ModelName; effort: EffortLevel };
 export type Spend = { t: string; key: string; usd: number; model?: string };
@@ -130,20 +133,61 @@ export function usageOf(k: KeyConfig, ledger: Spend[], now = new Date()): Usage 
   };
 }
 
-export function readKey(label: string): string | undefined {
-  const r = spawnSync("security", ["find-generic-password", "-s", KEYCHAIN_SERVICE, "-a", label, "-w"], { encoding: "utf8" });
-  const key = r.status === 0 ? r.stdout.trim() : "";
-  return key || undefined;
+/** Windows seals each key with DPAPI, so only this Windows account can open it. The value goes in on stdin, never in a process listing. */
+function dpapi(op: "Protect" | "Unprotect", value: string): string {
+  const [from, to]: [string, string] =
+    op === "Protect" ? ["[Text.Encoding]::UTF8.GetBytes($v)", "[Convert]::ToBase64String($r)"] : ["[Convert]::FromBase64String($v)", "[Text.Encoding]::UTF8.GetString($r)"];
+  const script = `Add-Type -AssemblyName System.Security; $v = [Console]::In.ReadToEnd().Trim(); $r = [Security.Cryptography.ProtectedData]::${op}(${from}, $null, 'CurrentUser'); ${to}`;
+  const args = ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(script, "utf16le").toString("base64")];
+  const r = spawnSync("powershell.exe", args, { input: value, encoding: "utf8", windowsHide: true });
+  if (r.status !== 0) throw new Error(`Windows couldn't ${op === "Protect" ? "seal" : "open"} the key. ${(r.stderr || r.error?.message || "").trim()}`);
+  return r.stdout.trim();
 }
+
+/** Off macOS the keys sit in one file that only you can read: on Windows each one sealed, on Linux as they are. */
+function keyFile(): Record<string, string> {
+  try {
+    const v: unknown = JSON.parse(readFileSync(KEYS_FILE, "utf8"));
+    return isRecord(v) ? Object.fromEntries(Object.entries(v).filter((e): e is [string, string] => typeof e[1] === "string")) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function readKey(label: string): string | undefined {
+  if (MAC) {
+    const r = spawnSync("security", ["find-generic-password", "-s", KEYCHAIN_SERVICE, "-a", label, "-w"], { encoding: "utf8" });
+    const key = r.status === 0 ? r.stdout.trim() : "";
+    return key || undefined;
+  }
+  const stored = keyFile()[label];
+  if (!stored || !WINDOWS) return stored || undefined;
+  try {
+    return dpapi("Unprotect", stored) || undefined;
+  } catch {
+    return undefined; // sealed for another Windows account, or the file was damaged: adding the key again fixes both
+  }
+}
+
+/** Whether a key is stored, without opening it: on Windows opening one starts PowerShell. */
+export const keyStored = (label: string): boolean => (MAC ? readKey(label) !== undefined : Object.hasOwn(keyFile(), label));
 
 export function storeKey(label: string, key: string): void {
   if (!validLabel(label) || !API_KEY.test(key)) throw new Error("That doesn't look like an Anthropic API key (sk-ant-…).");
-  // `security -i` reads the command from stdin, so the key never shows up in a process listing.
-  spawnSync("security", ["-i"], { input: `add-generic-password -U -s ${KEYCHAIN_SERVICE} -a ${label} -w ${key}\n`, encoding: "utf8" });
-  if (readKey(label) !== key) throw new Error("The Keychain didn't keep the key.");
+  if (MAC) {
+    // `security -i` reads the command from stdin, so the key never shows up in a process listing.
+    spawnSync("security", ["-i"], { input: `add-generic-password -U -s ${KEYCHAIN_SERVICE} -a ${label} -w ${key}\n`, encoding: "utf8" });
+  } else {
+    // shortcut: on Linux the file's 0600 mode is the only protection, as with Claude Code's own credentials file; move to the Secret Service if people ask.
+    const keys = { ...keyFile(), [label]: WINDOWS ? dpapi("Protect", key) : key };
+    mkdirSync(EXTRATIME_DIR, { recursive: true, mode: 0o700 });
+    writeFileSync(KEYS_FILE, JSON.stringify(keys, null, 2) + "\n", { mode: 0o600 });
+    chmodSync(KEYS_FILE, 0o600); // the mode above only applies when the file is new
+  }
+  if (readKey(label) !== key) throw new Error(MAC ? "The Keychain didn't keep the key." : `Couldn't save the key in ${KEYS_FILE}.`);
 }
 
-/** Claude Code's home on this Mac: conversations live here, whichever key pays for them. */
+/** Claude Code's home: conversations live here, whichever key pays for them. */
 export function homes(): string[] {
   const list = [process.env.CLAUDE_CONFIG_DIR, join(homedir(), ".claude")];
   return [...new Set(list.filter((h): h is string => typeof h === "string" && existsSync(h)))];

@@ -1,7 +1,7 @@
 import type { EffortLevel, PermissionMode } from "@anthropic-ai/claude-agent-sdk";
 import { useAnimation, useApp, useInput, usePaste, useWindowSize, type Key } from "ink";
 import { useEffect, useRef, useState } from "react";
-import { EFFORTS, MODELS, creditOf, isEffort, isModel, lastExchange, readKey, readLedger, recordSpend, saveConfig, usageOf, type Config, type ModelName, type Spend } from "./config.js";
+import { EFFORTS, MODELS, creditOf, isEffort, isModel, keyStored, lastExchange, readLedger, recordSpend, saveConfig, usageOf, type Config, type ModelName, type Spend } from "./config.js";
 import { money, tilde, whole } from "./format.js";
 import { renderMarkdown } from "./markdown.js";
 import { Session, type PermissionAnswer, type PermissionAsk, type RunningTool, type SessionEvent } from "./session.js";
@@ -18,7 +18,7 @@ export function App({ boot }: { boot: Boot }) {
   const { columns } = useWindowSize();
   const [config, setConfig] = useState(boot.config);
   const [ledger, setLedger] = useState(boot.ledger);
-  const [stored] = useState(() => new Set(boot.config.keys.map((k) => k.label).filter((label) => readKey(label))));
+  const [stored] = useState(() => new Set(boot.config.keys.map((k) => k.label).filter((label) => keyStored(label))));
   const keysView = (cfg: Config, spends: Spend[]): KeyView[] =>
     cfg.keys.map((k, i) => ({ ...creditOf(k, spends), accent: ACCENTS[i % ACCENTS.length] ?? "cyan", active: k.label === cfg.active, stored: stored.has(k.label) }));
 
@@ -49,7 +49,7 @@ export function App({ boot }: { boot: Boot }) {
     latest.current.config = cfg;
   };
   const hasKey = (label: string): boolean => {
-    if (!stored.has(label) && readKey(label)) stored.add(label);
+    if (!stored.has(label) && keyStored(label)) stored.add(label);
     return stored.has(label);
   };
   const setRunning = (next: RunningTool[]): void => {

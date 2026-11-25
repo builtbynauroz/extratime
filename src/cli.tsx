@@ -3,9 +3,9 @@ import {
   defaultHome,
   findSession,
   isDate,
+  keyStored,
   loadConfig,
   localDate,
-  readKey,
   readLedger,
   recordSpend,
   saveConfig,
@@ -26,8 +26,8 @@ const HELP = `extratime · a coding agent on your Anthropic API key · Powered b
   extratime usage            spending by day and model, and how long each key lasts
   extratime status           one line of credit, for Claude Code's status line
   extratime key add <name> [--credit 100] [--days 30] [--from <YYYY-MM-DD>]
-                             store an API key in the Keychain: it asks, hidden,
-                             or takes it piped (pbpaste | extratime key add <name>);
+                             store an API key: it asks without showing it,
+                             or reads one piped in (from your clipboard, say);
                              the credit lasts --days from --from (default today)
   extratime key list         your keys, credit left and days left
 
@@ -86,7 +86,7 @@ function readHidden(prompt: string): Promise<string> {
   });
 }
 
-/** A key piped in (`pbpaste | extratime key add personal`) never touches the screen either. */
+/** A key piped in (from the clipboard, say) never touches the screen either. */
 function readPiped(): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = "";
@@ -107,7 +107,7 @@ async function keyCommand(args: string[]): Promise<void> {
     const ledger = readLedger();
     for (const k of config.keys) {
       const c = creditOf(k, ledger);
-      const state = readKey(k.label) ? `${money(c.left)} left of ${whole(c.credit)}${c.out ? ", out of credit" : ""}` : "no key stored";
+      const state = keyStored(k.label) ?`${money(c.left)} left of ${whole(c.credit)}${c.out ? ", out of credit" : ""}` : "no key stored";
       const window = c.ended ? `ended ${shortDate(c.ends)}` : `${c.daysLeft} days left, until ${shortDate(c.ends)}`;
       out(`${k.label === config.active ? "●" : "○"} ${k.label.padEnd(10)} ${state} · ${window}\n`);
     }
@@ -123,7 +123,7 @@ async function keyCommand(args: string[]): Promise<void> {
   const credit = flag(args, "--credit", 1, 100000) ?? existing?.credit ?? 100;
   const days = Math.floor(flag(args, "--days", 1, 366) ?? existing?.days ?? 30);
   const from = dateFlag(args, "--from");
-  const hasKey = readKey(label) !== undefined;
+  const hasKey = keyStored(label);
   const key = process.stdin.isTTY ? await readHidden(`API key for ${label}${hasKey ? " (Enter keeps the stored one)" : ""}: `) : await readPiped();
   if (key) storeKey(label, key);
   else if (!hasKey) throw new Error("No key entered, so nothing was saved.");
@@ -200,7 +200,6 @@ async function printMode(prompt: string, resumeWanted: boolean): Promise<void> {
 }
 
 async function main(args: string[]): Promise<void> {
-  if (process.platform !== "darwin") throw new Error("extratime keeps API keys in the macOS Keychain, so it runs on macOS only for now.");
   if (args[0] === "key") return keyCommand(args.slice(1));
   if (args[0] === "usage") return usageCommand();
   if (args[0] === "status") return statusLine();
