@@ -1,12 +1,12 @@
 {
-  "name": "capi",
-  "description": "capi: carry on a Claude Code conversation on your own Anthropic API key when your plan's limit runs out.",
+  "name": "extratime",
+  "description": "extratime: carry on a Claude Code conversation on your own Anthropic API key when your plan's limit runs out.",
   "owner": {
     "name": "builtbynauroz"
   },
   "plugins": [
     {
-      "name": "capi",
+      "name": "extratime",
       "source": "./"
     }
   ]

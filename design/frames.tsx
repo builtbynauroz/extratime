@@ -14,7 +14,7 @@ const ends = new Date(2026, 11, 14);
 const work: KeyView = { label: "work", accent: "cyan", left: 31.2, credit: 50, ends, daysLeft: 23, ended: false, out: false, active: true, stored: true };
 const personal: KeyView = { label: "personal", accent: "magenta", left: 20, credit: 20, ends, daysLeft: 23, ended: false, out: false, active: false, stored: true };
 const spend = (day: number, usd: number, model: string): Spend => ({ t: new Date(2026, 10, day, 15).toISOString(), key: "work", usd, model });
-// The ledger stores capi's short model names, as recordSpend writes them.
+// The ledger stores extratime's short model names, as recordSpend writes them.
 const ledger = [spend(14, 3.1, "opus"), spend(15, 1.4, "opus"), spend(16, 6.2, "opus"), spend(18, 0.4, "haiku"), spend(19, 5.3, "sonnet"), spend(20, 2.4, "opus")];
 const now = new Date(2026, 10, 21, 18);
 const usage: UsageRow[] = [
@@ -61,7 +61,7 @@ const conversation = (width: number): Item[] => [
 
 const states: Record<string, (width: number) => Partial<ViewState>> = {
   start: () => ({}),
-  // capi's moment: Claude Code's limit ran out mid-request, and `capi -c` picks the conversation up.
+  // extratime's moment: Claude Code's limit ran out mid-request, and `extratime -c` picks the conversation up.
   continued: () => ({
     items: [
       welcome([work, personal]),
@@ -95,7 +95,7 @@ const states: Record<string, (width: number) => Partial<ViewState>> = {
     status: "Thinking",
   }),
   "no-key": (w) => ({
-    items: [...conversation(w), { kind: "notice", tone: "bad", text: "No API key stored for personal. In another terminal: capi key add personal" }],
+    items: [...conversation(w), { kind: "notice", tone: "bad", text: "No API key stored for personal. In another terminal: extratime key add personal" }],
     keys: [work, { ...personal, stored: false }],
   }),
 };

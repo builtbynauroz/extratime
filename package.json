@@ -1,16 +1,34 @@
 {
-  "name": "capi",
+  "name": "extratime",
   "version": "0.1.0",
-  "private": true,
   "description": "A terminal coding agent on your own Anthropic API key, built on the Claude Agent SDK. Powered by Claude.",
   "license": "MIT",
   "author": "builtbynauroz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/builtbynauroz/extratime.git"
+  },
+  "homepage": "https://github.com/builtbynauroz/extratime#readme",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "agent-sdk",
+    "api-key",
+    "usage-limit",
+    "cli"
+  ],
   "type": "module",
   "bin": {
-    "capi": "bin/capi"
+    "extratime": "bin/extratime.js"
   },
+  "files": [
+    "bin",
+    "src",
+    "tsconfig.json"
+  ],
   "engines": {
-    "node": ">=20"
+    "node": ">=20.6"
   },
   "os": [
     "darwin"

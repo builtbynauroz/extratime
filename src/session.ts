@@ -189,7 +189,7 @@ export class Session {
   private start(): Run | undefined {
     const apiKey = readKey(this.key);
     if (!apiKey) {
-      this.o.on({ type: "error", message: `No API key stored for "${this.key}". In another terminal: capi key add ${this.key}` });
+      this.o.on({ type: "error", message: `No API key stored for "${this.key}". In another terminal: extratime key add ${this.key}` });
       return undefined;
     }
     const env: Record<string, string | undefined> = { ...process.env, ANTHROPIC_API_KEY: apiKey, CLAUDE_CONFIG_DIR: this.o.home };
@@ -197,7 +197,7 @@ export class Session {
     delete env.ANTHROPIC_AUTH_TOKEN;
     delete env.CLAUDE_CODE_OAUTH_TOKEN;
     delete env.CLAUDE_CODE_EFFORT_LEVEL;
-    // Inherited from a Claude Code session, these would label capi's requests as Claude Code's; capi is an
+    // Inherited from a Claude Code session, these would label extratime's requests as Claude Code's; extratime is an
     // Agent SDK app, so without them the SDK marks its child sdk-ts.
     delete env.CLAUDE_CODE_ENTRYPOINT;
     delete env.CLAUDECODE;
@@ -314,7 +314,7 @@ export class Session {
 
   private onApiError(e: SDKAssistantMessageError): void {
     if (e === "billing_error") this.o.on({ type: "billing", key: this.key });
-    else if (e === "authentication_failed") this.o.on({ type: "error", message: `The ${this.key} key was refused. Store it again: capi key add ${this.key}` });
+    else if (e === "authentication_failed") this.o.on({ type: "error", message: `The ${this.key} key was refused. Store it again: extratime key add ${this.key}` });
     else if (e === "rate_limit" || e === "overloaded") this.o.on({ type: "status", label: "Waiting for the API" });
     else this.o.on({ type: "error", message: `The API said: ${e.replaceAll("_", " ")}` });
   }

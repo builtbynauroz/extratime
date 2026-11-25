@@ -1,12 +1,12 @@
 {
-  "name": "capi",
+  "name": "extratime",
   "version": "0.1.0",
-  "description": "When Claude Code's plan limit runs out, carry on in the same conversation on your own Anthropic API key: capi -c. The plugin warns you before the limit and sets capi up.",
+  "description": "When Claude Code's plan limit runs out, carry on in the same conversation on your own Anthropic API key: extratime -c. The plugin warns you before the limit and sets extratime up.",
   "author": {
     "name": "builtbynauroz"
   },
-  "homepage": "https://github.com/builtbynauroz/capi",
-  "repository": "https://github.com/builtbynauroz/capi",
+  "homepage": "https://github.com/builtbynauroz/extratime",
+  "repository": "https://github.com/builtbynauroz/extratime",
   "license": "MIT",
   "keywords": [
     "usage-limit",

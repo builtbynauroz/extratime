@@ -60,7 +60,7 @@ const MODEL_NOTE: Record<ModelName, string> = {
 export const EFFORT_NOTE: Record<EffortLevel, string> = {
   low: "quick answers and small edits; cheapest",
   medium: "everyday work",
-  high: "careful work; capi's default",
+  high: "careful work; extratime's default",
   xhigh: "hard bugs and big changes; uses more credit",
   max: "the hardest problems; uses the most credit",
 };
@@ -117,7 +117,7 @@ function ItemView({ item, accent, columns }: { item: Item; accent: string; colum
         <Box borderStyle="round" borderColor={accent} paddingX={1} flexDirection="column" width={Math.min(columns - 2, 92)}>
           <Text>
             <Text color={accent} bold>
-              ◆ capi
+              ◆ extratime
             </Text>
             <Text dimColor>  coding on your own API key · Powered by Claude</Text>
           </Text>
@@ -270,7 +270,7 @@ function OverlayView({ s, overlay, accent }: { s: ViewState; overlay: Overlay; a
   switch (overlay.kind) {
     case "help":
       return (
-        <Panel title="capi" color={accent} hint={CLOSE}>
+        <Panel title="extratime" color={accent} hint={CLOSE}>
           {HELP.map(([key, what]) => (
             <Text key={key}>
               <Text color={accent}>{key.padEnd(17)}</Text>
@@ -319,7 +319,7 @@ const modelName = (m: string): string => (isModel(m) ? MODEL_LABEL[m] : m);
 const midnight = (d: Date): number => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 const daysBetween = (a: Date, b: Date): number => Math.max(0, Math.round((midnight(b) - midnight(a)) / 86_400_000));
 
-/** Where each key's credit went, for /usage and `capi usage`. */
+/** Where each key's credit went, for /usage and `extratime usage`. */
 export function UsageView({ rows }: { rows: UsageRow[] }) {
   return (
     <Box flexDirection="column">
@@ -370,7 +370,7 @@ export function UsageView({ rows }: { rows: UsageRow[] }) {
           </Box>
         );
       })}
-      <Text dimColor>capi counts only its own replies; the Console's Usage page has the rest.</Text>
+      <Text dimColor>extratime counts only its own replies; the Console's Usage page has the rest.</Text>
     </Box>
   );
 }

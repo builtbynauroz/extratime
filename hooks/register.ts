@@ -1,4 +1,4 @@
-// capi's plugin: when a plan usage window (5-hour, weekly) passes 90% or runs out, a toast says how to carry on in the
+// extratime's plugin: when a plan usage window (5-hour, weekly) passes 90% or runs out, a toast says how to carry on in the
 // same conversation on the user's own API key. One toast per crossing per window; a window that resets can warn again.
 import type { Register } from 'claude-code'
 
@@ -18,8 +18,8 @@ export const register: Register = (on) => {
       if (level <= before) continue
       $.ui.toast(
         level === 100
-          ? `Your ${windowName(w.kind)} limit is used up. In a terminal here, run capi -c: same conversation, on your API key.`
-          : `Your ${windowName(w.kind)} limit is at ${Math.floor(w.percentUsed)}%. When it runs out, capi -c in a terminal here carries on, on your API key.`,
+          ? `Your ${windowName(w.kind)} limit is used up. In a terminal here, run extratime -c: same conversation, on your API key.`
+          : `Your ${windowName(w.kind)} limit is at ${Math.floor(w.percentUsed)}%. When it runs out, extratime -c in a terminal here carries on, on your API key.`,
       )
     }
     return next(e)

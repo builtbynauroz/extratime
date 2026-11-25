@@ -99,7 +99,7 @@ export function App({ boot }: { boot: Boot }) {
       session.switchKey(next.label, true);
       return;
     }
-    note("bad", `${label} is out of credit, and no other key has any left. Add one with: capi key add <name>`);
+    note("bad", `${label} is out of credit, and no other key has any left. Add one with: extratime key add <name>`);
   };
 
   /** The reply that spends a key's last budget hands the next message to a key with budget left. Unlike a billing
@@ -115,7 +115,7 @@ export function App({ boot }: { boot: Boot }) {
       note("warn", `${label}'s ${whole(k.credit)} budget is spent. The next message goes on ${next.label} (${money(next.left)} left).`);
       return;
     }
-    note("warn", `${label}'s ${whole(k.credit)} budget is spent, and no other key has budget left. Raise it: capi key add ${label} --credit <more>`);
+    note("warn", `${label}'s ${whole(k.credit)} budget is spent, and no other key has budget left. Raise it: extratime key add ${label} --credit <more>`);
   };
 
   onEvent.current = (e) => {
@@ -157,7 +157,7 @@ export function App({ boot }: { boot: Boot }) {
         let spends = before;
         if (e.usd > 0) {
           recordSpend(e.key, e.usd, e.model);
-          // Read it back rather than append: another capi window may be spending the same key.
+          // Read it back rather than append: another extratime window may be spending the same key.
           spends = readLedger();
           setLedger(spends);
           latest.current.ledger = spends;
@@ -197,9 +197,9 @@ export function App({ boot }: { boot: Boot }) {
 
   const switchTo = (label: string): void => {
     const cfg = latest.current.config;
-    if (!cfg.keys.some((k) => k.label === label)) return note("bad", `There's no key called ${label}. Add one with: capi key add ${label}`);
+    if (!cfg.keys.some((k) => k.label === label)) return note("bad", `There's no key called ${label}. Add one with: extratime key add ${label}`);
     if (label === cfg.active) return;
-    if (!hasKey(label)) return note("bad", `No API key stored for ${label}. In another terminal: capi key add ${label}`);
+    if (!hasKey(label)) return note("bad", `No API key stored for ${label}. In another terminal: extratime key add ${label}`);
     commit({ ...cfg, active: label });
     session.switchKey(label);
     note("info", session.busy ? `Switching to ${label} when this reply ends.` : `Now on ${label}. Same conversation.`);
@@ -231,7 +231,7 @@ export function App({ boot }: { boot: Boot }) {
     setOverlay({ kind, index: Math.max(0, index) });
   };
 
-  /** capi's own commands; anything else starting with / goes to the agent (/compact, skills). */
+  /** extratime's own commands; anything else starting with / goes to the agent (/compact, skills). */
   const runCommand = (text: string): boolean => {
     const [command = "", arg] = text.slice(1).split(/\s+/);
     switch (command) {

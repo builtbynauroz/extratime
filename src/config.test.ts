@@ -1,4 +1,4 @@
-// The credit math every meter, key switch and budget warning rests on, and the recap `capi -c` shows. Run: npm test
+// The credit math every meter, key switch and budget warning rests on, and the recap `extratime -c` shows. Run: npm test
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -8,7 +8,7 @@ import { creditOf, lastExchange, type KeyConfig, type Spend } from "./config.js"
 
 /** A Claude Code home holding one conversation for /work/shop, made of these transcript lines. */
 function transcript(lines: unknown[]): { home: string; cwd: string; id: string } {
-  const home = mkdtempSync(join(tmpdir(), "capi-test-"));
+  const home = mkdtempSync(join(tmpdir(), "extratime-test-"));
   const cwd = "/work/shop";
   mkdirSync(join(home, "projects", "-work-shop"), { recursive: true });
   writeFileSync(join(home, "projects", "-work-shop", "s1.jsonl"), lines.map((l) => JSON.stringify(l)).join("\n") + "\n");

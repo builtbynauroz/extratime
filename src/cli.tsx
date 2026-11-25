@@ -16,22 +16,22 @@ import {
 } from "./config.js";
 import { duration, money, shortDate, whole } from "./format.js";
 
-const HELP = `capi · a coding agent on your Anthropic API key · Powered by Claude
+const HELP = `extratime · a coding agent on your Anthropic API key · Powered by Claude
 
-  capi                  start a new conversation in this folder
-  capi -c               continue the newest conversation in this folder,
-                        including one started in Claude Code
-  capi -r <id>          continue a conversation by its ID
-  capi -p "<prompt>"    one reply, printed, with no screen (add -c to continue)
-  capi usage            spending by day and model, and how long each key lasts
-  capi status           one line of credit, for Claude Code's status line
-  capi key add <name> [--credit 100] [--days 30] [--from <YYYY-MM-DD>]
-                        store an API key in the Keychain: it asks, hidden,
-                        or takes it piped (pbpaste | capi key add <name>);
-                        the credit lasts --days from --from (default today)
-  capi key list         your keys, credit left and days left
+  extratime                  start a new conversation in this folder
+  extratime -c               continue the newest conversation in this folder,
+                             including one started in Claude Code
+  extratime -r <id>          continue a conversation by its ID
+  extratime -p "<prompt>"    one reply, printed, with no screen (add -c to continue)
+  extratime usage            spending by day and model, and how long each key lasts
+  extratime status           one line of credit, for Claude Code's status line
+  extratime key add <name> [--credit 100] [--days 30] [--from <YYYY-MM-DD>]
+                             store an API key in the Keychain: it asks, hidden,
+                             or takes it piped (pbpaste | extratime key add <name>);
+                             the credit lasts --days from --from (default today)
+  extratime key list         your keys, credit left and days left
 
-Inside capi: ⌃K switch key · ⌃E effort · ⇧⇥ permissions · esc interrupt · /help
+Inside extratime: ⌃K switch key · ⌃E effort · ⇧⇥ permissions · esc interrupt · /help
 `;
 
 const ESC = "\u001b[";
@@ -86,7 +86,7 @@ function readHidden(prompt: string): Promise<string> {
   });
 }
 
-/** A key piped in (`pbpaste | capi key add personal`) never touches the screen either. */
+/** A key piped in (`pbpaste | extratime key add personal`) never touches the screen either. */
 function readPiped(): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = "";
@@ -103,7 +103,7 @@ async function keyCommand(args: string[]): Promise<void> {
   const [sub, label] = args;
   const config = loadConfig();
   if (sub === "list") {
-    if (!config.keys.length) return out("No keys yet. Add one: capi key add personal\n");
+    if (!config.keys.length) return out("No keys yet. Add one: extratime key add personal\n");
     const ledger = readLedger();
     for (const k of config.keys) {
       const c = creditOf(k, ledger);
@@ -139,7 +139,7 @@ async function keyCommand(args: string[]): Promise<void> {
 
 async function usageCommand(): Promise<void> {
   const config = loadConfig();
-  if (!config.keys.length) return out("No keys yet. Add one: capi key add personal\n");
+  if (!config.keys.length) return out("No keys yet. Add one: extratime key add personal\n");
   const ledger = readLedger();
   const [{ createElement }, { renderToString }, { ACCENTS, UsageView }] = await Promise.all([import("react"), import("ink"), import("./ui.js")]);
   const rows = config.keys.map((k, i) => ({ ...usageOf(k, ledger), accent: ACCENTS[i % ACCENTS.length] ?? "cyan", active: k.label === config.active }));
@@ -149,7 +149,7 @@ async function usageCommand(): Promise<void> {
 /** One line for Claude Code's status line (`statusLine` in settings.json): the key in use, its meter, then the others. */
 function statusLine(): void {
   const config = loadConfig();
-  if (!config.keys.length) return out("capi: no keys");
+  if (!config.keys.length) return out("extratime: no keys");
   const ledger = readLedger();
   const inUseFirst = [...config.keys].sort((a, b) => Number(b.label === config.active) - Number(a.label === config.active));
   const parts = inUseFirst.map((k) => {
@@ -160,14 +160,14 @@ function statusLine(): void {
     const color = share >= 0.25 ? ANSI.green : share >= 0.1 ? ANSI.yellow : ANSI.red;
     return `● ${k.label} ${color}${"▰".repeat(filled)}${ANSI.dim}${"▱".repeat(10 - filled)}${ANSI.reset} ${money(c.left)} left · ${c.ended ? "ended" : `${c.daysLeft}d`}`;
   });
-  out(`capi ${parts.join("  ")}`);
+  out(`extratime ${parts.join("  ")}`);
 }
 
-/** One turn with no screen, for scripts and for watching capi from Claude Code. */
+/** One turn with no screen, for scripts and for watching extratime from Claude Code. */
 async function printMode(prompt: string, resumeWanted: boolean): Promise<void> {
   const config = loadConfig();
   const key = config.active;
-  if (!key) throw new Error("No API keys yet. Store one first: capi key add personal");
+  if (!key) throw new Error("No API keys yet. Store one first: extratime key add personal");
   const found = resumeWanted ? findSession(process.cwd()) : undefined;
   const [{ Session }, { renderMarkdown }] = await Promise.all([import("./session.js"), import("./markdown.js")]);
   const ledger = readLedger();
@@ -183,8 +183,8 @@ async function printMode(prompt: string, resumeWanted: boolean): Promise<void> {
       on: (e) => {
         if (e.type === "message") out(`${renderMarkdown(e.text, Math.max(40, (process.stdout.columns || 100) - 2))}\n\n`);
         else if (e.type === "tool") out(`● ${e.tool.name}  ${e.tool.detail}\n`);
-        else if (e.type === "error") process.stderr.write(`capi: ${e.message}\n`);
-        else if (e.type === "billing") process.stderr.write(`capi: ${e.key} is out of credit\n`);
+        else if (e.type === "error") process.stderr.write(`extratime: ${e.message}\n`);
+        else if (e.type === "billing") process.stderr.write(`extratime: ${e.key} is out of credit\n`);
         else if (e.type === "turnEnd") {
           if (e.usd > 0) ledger.push(recordSpend(e.key, e.usd, e.model));
           const k = config.keys.find((x) => x.label === e.key);
@@ -200,7 +200,7 @@ async function printMode(prompt: string, resumeWanted: boolean): Promise<void> {
 }
 
 async function main(args: string[]): Promise<void> {
-  if (process.platform !== "darwin") throw new Error("capi keeps API keys in the macOS Keychain, so it runs on macOS only for now.");
+  if (process.platform !== "darwin") throw new Error("extratime keeps API keys in the macOS Keychain, so it runs on macOS only for now.");
   if (args[0] === "key") return keyCommand(args.slice(1));
   if (args[0] === "usage") return usageCommand();
   if (args[0] === "status") return statusLine();
@@ -213,13 +213,13 @@ async function main(args: string[]): Promise<void> {
       .filter((a) => a !== "-c" && a !== "--continue")
       .join(" ")
       .trim();
-    if (!prompt) throw new Error('Give the prompt after -p, like: capi -p "summarise this repo"');
+    if (!prompt) throw new Error('Give the prompt after -p, like: extratime -p "summarise this repo"');
     return printMode(prompt, resumeWanted);
   }
   const config = loadConfig();
   const key = config.active;
   if (!key) {
-    out("No API keys yet. Store one first, for example:\n  capi key add personal --credit 100 --days 30\n");
+    out("No API keys yet. Store one first, for example:\n  extratime key add personal --credit 100 --days 30\n");
     process.exitCode = 1;
     return;
   }
@@ -237,6 +237,6 @@ async function main(args: string[]): Promise<void> {
 }
 
 main(process.argv.slice(2)).catch((err: unknown) => {
-  process.stderr.write(`capi: ${err instanceof Error ? err.message : String(err)}\n`);
+  process.stderr.write(`extratime: ${err instanceof Error ? err.message : String(err)}\n`);
   process.exitCode = 1;
 });

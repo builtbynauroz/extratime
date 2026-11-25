@@ -4,10 +4,10 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import type { EffortLevel } from "@anthropic-ai/claude-agent-sdk";
 
-export const CAPI_DIR = join(homedir(), ".capi");
-const CONFIG_FILE = join(CAPI_DIR, "config.json");
-const LEDGER_FILE = join(CAPI_DIR, "ledger.jsonl");
-const KEYCHAIN_SERVICE = "capi";
+export const EXTRATIME_DIR = join(homedir(), ".extratime");
+const CONFIG_FILE = join(EXTRATIME_DIR, "config.json");
+const LEDGER_FILE = join(EXTRATIME_DIR, "ledger.jsonl");
+const KEYCHAIN_SERVICE = "extratime";
 
 export const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const satisfies readonly EffortLevel[];
 export const MODELS = { opus: "claude-opus-5-5", sonnet: "claude-sonnet-5-5", haiku: "claude-haiku-5-5" } as const;
@@ -67,7 +67,7 @@ export function loadConfig(): Config {
 }
 
 export function saveConfig(c: Config): void {
-  mkdirSync(CAPI_DIR, { recursive: true, mode: 0o700 });
+  mkdirSync(EXTRATIME_DIR, { recursive: true, mode: 0o700 });
   writeFileSync(CONFIG_FILE, JSON.stringify(c, null, 2) + "\n");
 }
 
@@ -90,12 +90,12 @@ export function readLedger(): Spend[] {
 
 export function recordSpend(key: string, usd: number, model: ModelName): Spend {
   const spend = { t: new Date().toISOString(), key, usd, model };
-  mkdirSync(CAPI_DIR, { recursive: true, mode: 0o700 });
+  mkdirSync(EXTRATIME_DIR, { recursive: true, mode: 0o700 });
   appendFileSync(LEDGER_FILE, JSON.stringify(spend) + "\n");
   return spend;
 }
 
-/** What a key has left in its window, from capi's own ledger. A billing error from the API, or the window ending, zeroes it. */
+/** What a key has left in its window, from extratime's own ledger. A billing error from the API, or the window ending, zeroes it. */
 export function creditOf(k: KeyConfig, ledger: Spend[], now = new Date()): Credit {
   const start = fromLocal(k.start);
   const ends = new Date(start.getFullYear(), start.getMonth(), start.getDate() + k.days);
