@@ -75,4 +75,4 @@ security delete-generic-password -s capi -a <key name>   # once per key
 
 ## License
 
-MIT. Made by Runtime Studio. Not affiliated with or endorsed by Anthropic.
+MIT. Made by [builtbynauroz](https://builtbynauroz.tech). Not affiliated with or endorsed by Anthropic.

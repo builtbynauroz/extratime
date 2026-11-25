@@ -4,7 +4,7 @@
   "private": true,
   "description": "A terminal coding agent on your own Anthropic API key, built on the Claude Agent SDK. Powered by Claude.",
   "license": "MIT",
-  "author": "Runtime Studio",
+  "author": "builtbynauroz",
   "type": "module",
   "bin": {
     "capi": "bin/capi"
